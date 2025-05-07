@@ -1,6 +1,6 @@
 fastapi
 uvicorn
 opencv-python
-midas-torch
+git+https://github.com/isl-org/MiDaS.git
 torch
 Pillow
