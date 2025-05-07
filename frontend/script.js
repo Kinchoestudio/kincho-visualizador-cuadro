@@ -1,0 +1,1 @@
+// JS para enviar imagen al backend y mostrar resultado

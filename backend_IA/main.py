@@ -1,0 +1,1 @@
+# Código principal FastAPI (simulado para ejemplo)

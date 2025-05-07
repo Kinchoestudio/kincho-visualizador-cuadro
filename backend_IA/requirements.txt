@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+opencv-python
+midas-torch
+torch
+Pillow
