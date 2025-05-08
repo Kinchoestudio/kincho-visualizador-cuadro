@@ -87,4 +87,13 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         buffered = io.BytesIO()
         final_image.save(buffered, format="PNG")
         encoded = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        return JSONResponse(content={"base64": encoded})
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+@app.get("/")
+def root():
+    return {"message": "MiDaS backend funcionando"}
+
 
