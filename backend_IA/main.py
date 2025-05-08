@@ -20,23 +20,22 @@ sys.path.append("MiDaS")
 from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
-# Modelo ligero compatible con Render Free
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_levit_224.pt"
+model_path = "MiDaS/weights/dpt_beit_large_384.pt"
 if not os.path.exists(model_path):
     os.makedirs("MiDaS/weights", exist_ok=True)
-    os.system(f"wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_levit_224.pt -O {model_path}")
+    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_384.pt -O " + model_path)
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="dpt_levit_224",
+    backbone="beit_large_512",
     non_negative=True,
 )
 model.eval()
 model.to(device)
 
 transform = Compose([
-    Resize(224, 224, resize_target=None, keep_aspect_ratio=True,
+    Resize(384, 384, resize_target=None, keep_aspect_ratio=True,
            ensure_multiple_of=32, resize_method="minimal",
            image_interpolation_method=cv2.INTER_CUBIC),
     NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -86,4 +85,4 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
 
 @app.get("/")
 def root():
-    return {"message": "MiDaS backend funcionando con modelo liviano"}
+    return {"message": "MiDaS backend funcionando"}
