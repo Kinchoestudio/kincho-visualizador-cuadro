@@ -86,4 +86,5 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         final_image = Image.fromarray(base)
         buffered = io.BytesIO()
         final_image.save(buffered, format="PNG")
-        encoded = base64.b64encode(buffered.getvalue()).dec
+        encoded = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
