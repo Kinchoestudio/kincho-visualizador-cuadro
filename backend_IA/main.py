@@ -24,14 +24,14 @@ from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 # Cargar modelo MiDaS (modelo oficial soportado)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_large-midas-2f21e586.pt"
+model_path = "MiDaS/weights/dpt_beit_large_512.pt"
 if not os.path.exists(model_path):
     os.makedirs("MiDaS/weights", exist_ok=True)
-    os.system(f"wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large-midas-2f21e586.pt -O {model_path}")
+    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_512.pt -O " + model_path)
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="dpt_large",
+    backbone="dpt_beit_large_512",
     non_negative=True,
 )
 model.eval()
@@ -70,7 +70,6 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         prediction_resized = cv2.resize(prediction, (img.shape[1], img.shape[0]))
         prediction_resized = cv2.normalize(prediction_resized, None, 0, 1, cv2.NORM_MINMAX)
 
-        # Elegir centro de la imagen como plano donde poner el cuadro
         h, w = img.shape[:2]
         x_offset = w // 2 - img_cuadro.width // 2
         y_offset = h // 2 - img_cuadro.height // 2
@@ -82,7 +81,6 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
                 cuadro_np[..., c] * (cuadro_np[..., 3] / 255.0) + \
                 base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] * (1.0 - cuadro_np[..., 3] / 255.0)
 
-        # Convertir a PNG y base64
         final_image = Image.fromarray(base)
         buffered = io.BytesIO()
         final_image.save(buffered, format="PNG")
@@ -95,5 +93,3 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
 @app.get("/")
 def root():
     return {"message": "MiDaS backend funcionando"}
-
-
