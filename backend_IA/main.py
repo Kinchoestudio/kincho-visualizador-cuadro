@@ -22,16 +22,16 @@ sys.path.append("MiDaS")
 from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
-# Cargar modelo MiDaS
+# Cargar modelo MiDaS (modelo oficial soportado)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_swin2_tiny_256.pt"
+model_path = "MiDaS/weights/dpt_large-midas-2f21e586.pt"
 if not os.path.exists(model_path):
     os.makedirs("MiDaS/weights", exist_ok=True)
-    os.system(f"wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_swin2_tiny_256.pt -O {model_path}")
+    os.system(f"wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large-midas-2f21e586.pt -O {model_path}")
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="dpt_swin2_tiny_256",
+    backbone="dpt_large",
     non_negative=True,
 )
 model.eval()
@@ -39,7 +39,7 @@ model.to(device)
 
 transform = Compose([
     Resize(
-        256, 256,
+        384, 384,
         resize_target=None,
         keep_aspect_ratio=True,
         ensure_multiple_of=32,
@@ -78,19 +78,12 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         base = img.copy()
         cuadro_np = np.array(img_cuadro)
         for c in range(3):
-            base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] =                 cuadro_np[..., c] * (cuadro_np[..., 3] / 255.0) +                 base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] * (1.0 - cuadro_np[..., 3] / 255.0)
+            base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] = \
+                cuadro_np[..., c] * (cuadro_np[..., 3] / 255.0) + \
+                base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] * (1.0 - cuadro_np[..., 3] / 255.0)
 
         # Convertir a PNG y base64
         final_image = Image.fromarray(base)
         buffered = io.BytesIO()
         final_image.save(buffered, format="PNG")
-        encoded = base64.b64encode(buffered.getvalue()).decode("utf-8")
-
-        return JSONResponse(content={"base64": encoded})
-
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-@app.get("/")
-def root():
-    return {"message": "MiDaS backend funcionando"}
+        encoded = base64.b64encode(buffered.getvalue()).dec
