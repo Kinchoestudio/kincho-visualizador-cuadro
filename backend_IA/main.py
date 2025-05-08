@@ -4,7 +4,6 @@ import torch
 import cv2
 import numpy as np
 from torchvision.transforms import Compose
-import torchvision.transforms as T
 from PIL import Image
 import base64
 import io
@@ -24,14 +23,14 @@ from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 # Cargar modelo MiDaS (modelo oficial soportado)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_beit_large_512.pt"
+model_path = "MiDaS/weights/dpt_hybrid_384.pt"
 if not os.path.exists(model_path):
     os.makedirs("MiDaS/weights", exist_ok=True)
-    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_512.pt -O " + model_path)
+    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_hybrid_384.pt -O " + model_path)
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="dpt_beit_large_512",
+    backbone="vitb_rn50_384",  # Confirmado como válido en los hooks de MiDaS
     non_negative=True,
 )
 model.eval()
@@ -92,4 +91,4 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
 
 @app.get("/")
 def root():
-    return {"message": "MiDaS backend funcionando"}
+    return {"message": "MiDaS backend funcionando correctamente"}
