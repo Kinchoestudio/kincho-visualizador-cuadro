@@ -31,7 +31,7 @@ if not os.path.exists(model_path):
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="swin2T",
+    backbone="dpt_swin2_tiny_256",
     non_negative=True,
 )
 model.eval()
