@@ -21,10 +21,10 @@ from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_large_vitl16_384.pt"
+model_path = "MiDaS/weights/vitl16_384.pt"
 if not os.path.exists(model_path):
     os.makedirs("MiDaS/weights", exist_ok=True)
-    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_large_vitl16_384.pt -O " + model_path)
+    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/vitl16_384.pt -O " + model_path)
 
 model = DPTDepthModel(
     path=model_path,
