@@ -2,6 +2,6 @@ fastapi
 uvicorn
 opencv-python
 torch
+torchvision
 Pillow
 timm
-torchvision
