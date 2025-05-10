@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile 
 from fastapi.responses import JSONResponse
 import torch
 import cv2
@@ -12,7 +12,9 @@ import sys
 
 app = FastAPI()
 
-# Importar MiDaS desde carpeta local
+# Clonar MiDaS si no existe (para Render u otros entornos)
+if not os.path.exists("MiDaS"):
+    os.system("git clone https://github.com/isl-org/MiDaS.git")
 sys.path.append("MiDaS")
 
 from midas.dpt_depth import DPTDepthModel
