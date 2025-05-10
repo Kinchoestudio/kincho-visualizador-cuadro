@@ -12,30 +12,27 @@ import sys
 
 app = FastAPI()
 
-# Clonar MiDaS si no existe
-if not os.path.exists("MiDaS"):
-    os.system("git clone https://github.com/isl-org/MiDaS.git")
+# Importar MiDaS desde carpeta local
 sys.path.append("MiDaS")
 
 from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_swin2_tiny_256.pt"
-if not os.path.exists(model_path):
-    os.makedirs("MiDaS/weights", exist_ok=True)
-    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_swin2_tiny_256.pt -O " + model_path)
+
+# Usar pesos subidos manualmente
+model_path = "MiDaS/weights/midas_v21_small-70d6b9c8.pt"
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="swin2t16_256",
+    backbone="vitb_rn50_384",  # Cambiado según el peso usado
     non_negative=True,
 )
 model.eval()
 model.to(device)
 
 transform = Compose([
-    Resize(256, 256, resize_target=None, keep_aspect_ratio=True,
+    Resize(384, 384, resize_target=None, keep_aspect_ratio=True,
            ensure_multiple_of=32, resize_method="minimal",
            image_interpolation_method=cv2.INTER_CUBIC),
     NormalizeImage(mean=[0.485, 0.456, 0.406],
