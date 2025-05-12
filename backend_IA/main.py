@@ -13,7 +13,7 @@ import sys
 app = FastAPI()
 
 # Importar MiDaS desde carpeta local
-sys.path.append("midas")
+sys.path.append(os.path.join(os.path.dirname(__file__), "midas"))
 
 from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
