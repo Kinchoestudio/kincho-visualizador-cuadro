@@ -12,18 +12,16 @@ import sys
 
 app = FastAPI()
 
-# Clonar MiDaS si no existe
-if not os.path.exists("MiDaS"):
-    os.system("git clone https://github.com/isl-org/MiDaS.git")
-sys.path.append("MiDaS")
+# Importar MiDaS desde carpeta local
+sys.path.append("midas")
 
 from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model_path = "MiDaS/weights/dpt_swin2_tiny_256.pt"
+model_path = "midas/weights/dpt_swin2_tiny_256.pt"
 if not os.path.exists(model_path):
-    os.makedirs("MiDaS/weights", exist_ok=True)
+    os.makedirs("midas/weights", exist_ok=True)
     os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_swin2_tiny_256.pt -O " + model_path)
 
 model = DPTDepthModel(
@@ -87,7 +85,6 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
 def root():
     return {"message": "MiDaS backend funcionando"}
 
-# Ejecutar servidor en Render
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=10000)
