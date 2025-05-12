@@ -3,8 +3,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from .utils import activations, forward_default, get_activation, Transpose
-
 
 def forward_swin(pretrained, x):
     return forward_default(pretrained, x)
