@@ -28,9 +28,10 @@ def _make_levit_backbone(
     pretrained = nn.Module()
 
     pretrained.model = model
-    pretrained.model.blocks[hooks[0]].register_forward_hook(get_activation("1"))
-    pretrained.model.blocks[hooks[1]].register_forward_hook(get_activation("2"))
-    pretrained.model.blocks[hooks[2]].register_forward_hook(get_activation("3"))
+    pretrained.model.blocks[hooks[0]].register_forward_hook(lambda m, i, o: activations.update({"1": o}))
+    pretrained.model.blocks[hooks[1]].register_forward_hook(lambda m, i, o: activations.update({"2": o}))
+    pretrained.model.blocks[hooks[2]].register_forward_hook(lambda m, i, o: activations.update({"3": o}))
+
 
     pretrained.activations = activations
 

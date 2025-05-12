@@ -19,10 +19,10 @@ def _make_next_vit_backbone(
     pretrained = nn.Module()
 
     pretrained.model = model
-    pretrained.model.features[hooks[0]].register_forward_hook(get_activation("1"))
-    pretrained.model.features[hooks[1]].register_forward_hook(get_activation("2"))
-    pretrained.model.features[hooks[2]].register_forward_hook(get_activation("3"))
-    pretrained.model.features[hooks[3]].register_forward_hook(get_activation("4"))
+    pretrained.model.features[hooks[0]].register_forward_hook(lambda m, i, o: activations.update({"1": o}))
+    pretrained.model.features[hooks[1]].register_forward_hook(lambda m, i, o: activations.update({"2": o}))
+    pretrained.model.features[hooks[2]].register_forward_hook(lambda m, i, o: activations.update({"3": o}))
+    pretrained.model.features[hooks[3]].register_forward_hook(lambda m, i, o: activations.update({"4": o}))
 
     pretrained.activations = activations
 
