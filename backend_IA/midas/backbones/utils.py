@@ -78,3 +78,26 @@ def _make_swin_backbone(model, hooks=[1, 1, 17, 1], patch_grid=[96, 96]):
     )
 
     return pretrained
+
+
+# 🔧 Añadido para compatibilidad con vit.py
+def get_readout_oper(vit_features, features, use_readout, start_index=1):
+    readout_oper = []
+
+    for i in range(4):
+        if use_readout == "ignore":
+            op = lambda x: x[:, start_index:]
+        elif use_readout == "add":
+            op = lambda x: x[:, start_index:] + x[:, 0].unsqueeze(1)
+        elif use_readout == "project":
+            op = nn.Sequential(
+                Transpose(1, 2),
+                nn.Conv1d(vit_features, features[i], 1),
+                Transpose(1, 2),
+            )
+        else:
+            raise ValueError(f"Unknown readout operation: {use_readout}")
+
+        readout_oper.append(op)
+
+    return readout_oper
