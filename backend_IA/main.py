@@ -22,24 +22,34 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model_path = "midas/weights/dpt_swin2_tiny_256.pt"
 if not os.path.exists(model_path):
     os.makedirs("midas/weights", exist_ok=True)
-    os.system("wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_swin2_tiny_256.pt -O " + model_path)
+    os.system(
+        "wget https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_swin2_tiny_256.pt -O "
+        + model_path
+    )
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="swin2t16_256",
+    backbone="swin2_tiny_256",  # ← corregido aquí
     non_negative=True,
 )
 model.eval()
 model.to(device)
 
-transform = Compose([
-    Resize(256, 256, resize_target=None, keep_aspect_ratio=True,
-           ensure_multiple_of=32, resize_method="minimal",
-           image_interpolation_method=cv2.INTER_CUBIC),
-    NormalizeImage(mean=[0.485, 0.456, 0.406],
-                   std=[0.229, 0.224, 0.225]),
-    PrepareForNet()
-])
+transform = Compose(
+    [
+        Resize(
+            256,
+            256,
+            resize_target=None,
+            keep_aspect_ratio=True,
+            ensure_multiple_of=32,
+            resize_method="minimal",
+            image_interpolation_method=cv2.INTER_CUBIC,
+        ),
+        NormalizeImage(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        PrepareForNet(),
+    ]
+)
 
 @app.post("/visualizar")
 async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(...)):
@@ -55,11 +65,15 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         sample = torch.from_numpy(img_input).unsqueeze(0).to(device)
 
         with torch.no_grad():
-            prediction = model.forward(sample)
+            prediction = model(sample)
             prediction = prediction.squeeze().cpu().numpy()
 
-        prediction_resized = cv2.resize(prediction, (img.shape[1], img.shape[0]))
-        prediction_resized = cv2.normalize(prediction_resized, None, 0, 1, cv2.NORM_MINMAX)
+        prediction_resized = cv2.resize(
+            prediction, (img.shape[1], img.shape[0])
+        )
+        prediction_resized = cv2.normalize(
+            prediction_resized, None, 0, 1, cv2.NORM_MINMAX
+        )
 
         h, w = img.shape[:2]
         x_offset = w // 2 - img_cuadro.width // 2
@@ -68,9 +82,16 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         base = img.copy()
         cuadro_np = np.array(img_cuadro)
         for c in range(3):
-            base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] = \
-                cuadro_np[..., c] * (cuadro_np[..., 3] / 255.0) + \
-                base[y_offset:y_offset+cuadro_np.shape[0], x_offset:x_offset+cuadro_np.shape[1], c] * (1.0 - cuadro_np[..., 3] / 255.0)
+            alpha = cuadro_np[..., 3] / 255.0
+            base[
+                y_offset : y_offset + cuadro_np.shape[0],
+                x_offset : x_offset + cuadro_np.shape[1],
+                c,
+            ] = cuadro_np[..., c] * alpha + base[
+                y_offset : y_offset + cuadro_np.shape[0],
+                x_offset : x_offset + cuadro_np.shape[1],
+                c,
+            ] * (1.0 - alpha)
 
         final_image = Image.fromarray(base)
         buffered = io.BytesIO()
@@ -87,4 +108,5 @@ def root():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=10000)
