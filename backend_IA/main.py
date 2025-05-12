@@ -29,7 +29,7 @@ if not os.path.exists(model_path):
 
 model = DPTDepthModel(
     path=model_path,
-    backbone="swin2_tiny_256",  # ← corregido aquí
+    backbone="swin2t16_256",   # ← aquí el cambio clave
     non_negative=True,
 )
 model.eval()
@@ -108,5 +108,4 @@ def root():
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=10000)
