@@ -6,3 +6,4 @@ opencv-python
 torch
 torchvision
 timm
+git+https://github.com/isl-org/MiDaS.git@v3_1
