@@ -66,13 +66,13 @@ def _make_encoder(backbone, features, use_pretrained, groups=1, expand=False, ex
         scratch = _make_scratch(
             [128, 256, 512, 1024], features, groups=groups, expand=expand
         )  # Swin2-B/12to24 (backbone)
-    elif backbone == "swin2t16_256":
+    elif backbone == "swin2_tiny_256":
         pretrained = _make_pretrained_swin2t16_256(
             use_pretrained, hooks=hooks
         )
         scratch = _make_scratch(
             [96, 192, 384, 768], features, groups=groups, expand=expand
-        )  # Swin2-T/16 (backbone)
+        )  # Swin2-Tiny (backbone)
     elif backbone == "swinl12_384":
         pretrained = _make_pretrained_swinl12_384(
             use_pretrained, hooks=hooks
