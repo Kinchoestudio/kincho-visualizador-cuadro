@@ -20,18 +20,19 @@ app = FastAPI()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Ruta y descarga manual de pesos v3.1
-model_path = "dpt_swin2_tiny_256.pt"
+model_path = "midas/weights/dpt_swin2_tiny_256.pt"
 if not os.path.exists(model_path):
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
     os.system(
         "wget "
         "https://github.com/isl-org/MiDaS/releases/download/v3_1/"
         "dpt_swin2_tiny_256.pt -O " + model_path
     )
 
-# Instancia con el backbone que coincide con estos pesos
+# Instancia con el backbone coincidente con estos pesos
 model = DPTDepthModel(
     path=model_path,
-    backbone="swin2_tiny_256",
+    backbone="dpt_swin2_tiny_256",
     non_negative=True
 )
 model.to(device).eval()
@@ -62,9 +63,12 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
 
         # Post-procesado
         h, w = img_np.shape[:2]
-        pred = cv2.normalize(cv2.resize(pred, (w, h)), None, 0, 1, cv2.NORM_MINMAX)
+        pred = cv2.normalize(
+            cv2.resize(pred, (w, h)),
+            None, 0, 1, cv2.NORM_MINMAX
+        )
 
-        # Superponer cuadro
+        # Superponer cuadro en el centro
         base = img_np.astype(np.float32)
         cu = np.array(img_cuadro).astype(np.float32)
         alpha = cu[..., 3:] / 255.0
@@ -79,7 +83,9 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
         out = Image.fromarray(base.astype(np.uint8))
         buf = io.BytesIO()
         out.save(buf, format="PNG")
-        return JSONResponse({"base64": base64.b64encode(buf.getvalue()).decode()})
+        return JSONResponse({
+            "base64": base64.b64encode(buf.getvalue()).decode()
+        })
 
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
