@@ -1,5 +1,3 @@
-# backend_IA/midas/dpt_depth.py
-
 import torch
 import torch.nn as nn
 
@@ -42,20 +40,20 @@ class DPT(BaseModel):
     ):
         super(DPT, self).__init__()
 
-        # Si viene prefijado con "dpt_", lo eliminamos para que _make_encoder lo reconozca
+        # Si viene con prefijo "dpt_", lo quitamos para _make_encoder
         if backbone.startswith("dpt_"):
             backbone = backbone[len("dpt_"):]
 
         self.channels_last = channels_last
 
-        # Hooks para cada arquitectura compatible
+        # Hooks para cada arquitectura (AHORA con clave correcta)
         hooks = {
             "beitl16_512":      [5, 11, 17, 23],
             "beitl16_384":      [5, 11, 17, 23],
             "beitb16_384":      [2, 5, 8, 11],
             "swin2l24_384":     [1, 1, 17, 1],
             "swin2b24_384":     [1, 1, 17, 1],
-            "swin2_tiny_256":   [1, 1, 5,  1],  # <— Aquí
+            "swin2_tiny_256":   [1, 1, 5,  1],  # <-- corregido aquí
             "swinl12_384":      [1, 1, 17, 1],
             "next_vit_large_6m":[2, 6, 36, 39],
             "levit_384":        [3, 11, 21],
@@ -71,11 +69,11 @@ class DPT(BaseModel):
         else:
             in_features = None
 
-        # Creamos encoder + refinenets
+        # Construye encoder + refinenets
         self.pretrained, self.scratch = _make_encoder(
             backbone,
             features,
-            False,  # usar True si quieres entrenar desde cero
+            False,  # True = entrenar desde cero
             groups=1,
             expand=False,
             exportable=False,
@@ -104,7 +102,7 @@ class DPT(BaseModel):
         else:
             self.forward_transformer = forward_vit
 
-        # Fusion blocks
+        # Punto de fusión
         self.scratch.refinenet1 = _make_fusion_block(features, use_bn)
         self.scratch.refinenet2 = _make_fusion_block(features, use_bn)
         self.scratch.refinenet3 = _make_fusion_block(features, use_bn, size_refinenet3)
@@ -146,9 +144,9 @@ class DPT(BaseModel):
 
 class DPTDepthModel(DPT):
     def __init__(self, path=None, non_negative=True, **kwargs):
-        features       = kwargs.pop("features", 256)
-        head_f1        = kwargs.pop("head_features_1", features)
-        head_f2        = kwargs.pop("head_features_2", 32)
+        features = kwargs.pop("features", 256)
+        head_f1  = kwargs.pop("head_features_1", features)
+        head_f2  = kwargs.pop("head_features_2", 32)
 
         head = nn.Sequential(
             nn.Conv2d(head_f1, head_f1 // 2, kernel_size=3, stride=1, padding=1),
