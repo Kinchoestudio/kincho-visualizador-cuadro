@@ -1,0 +1,7 @@
+# Entorno virtual
+.venv/
+# Archivos pesados de pesos (si no usas LFS)
+backend_IA/midas/weights/*.pt
+# Bytecode, logs, etc.
+__pycache__/
+*.pyc
