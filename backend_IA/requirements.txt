@@ -1,8 +1,7 @@
 fastapi
 uvicorn
+numpy
+pillow
 opencv-python
-torch>=1.12
+torch
 torchvision
-Pillow
-timm>=0.6.13
-huggingface-hub
