@@ -1,3 +1,5 @@
+# backend_IA/main.py
+
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 import torch
@@ -9,17 +11,16 @@ import cv2
 import os
 
 # Asegúrate de haber añadido en requirements.txt:
-# git+https://github.com/isl-org/MiDaS.git@v3_1
-# timm
+#   git+https://github.com/isl-org/MiDaS.git@v3_1
+#   timm
 
 from midas.dpt_depth import DPTDepthModel
 from midas.transforms import Resize, NormalizeImage, PrepareForNet
 
 app = FastAPI()
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Ruta y descarga manual de pesos v3.1
+# Descarga manual de pesos v3.1
 model_path = "midas/weights/dpt_swin2_tiny_256.pt"
 if not os.path.exists(model_path):
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
@@ -29,18 +30,20 @@ if not os.path.exists(model_path):
         "dpt_swin2_tiny_256.pt -O " + model_path
     )
 
-# Instancia con el backbone coincidente con estos pesos
 model = DPTDepthModel(
     path=model_path,
-    backbone="dpt_swin2_tiny_256",
+    backbone="dpt_swin2_tiny_256",  # se strippea automáticamente en dpt_depth.py
     non_negative=True
 )
 model.to(device).eval()
 
-# Usa los transforms oficiales de MiDaS
+# Transforms oficiales MiDaS
 transform = Resize(
-    256, 256, resize_target=None, keep_aspect_ratio=True,
-    ensure_multiple_of=32, resize_method="minimal",
+    256, 256,
+    resize_target=None,
+    keep_aspect_ratio=True,
+    ensure_multiple_of=32,
+    resize_method="minimal",
     image_interpolation_method=cv2.INTER_CUBIC
 )
 normalize = NormalizeImage(mean=[0.485, 0.456, 0.406],
@@ -50,25 +53,21 @@ prepare = PrepareForNet()
 @app.post("/visualizar")
 async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(...)):
     try:
-        # Carga de imágenes
         img_pared = Image.open(io.BytesIO(await pared.read())).convert("RGB")
         img_cuadro = Image.open(io.BytesIO(await cuadro.read())).convert("RGBA")
 
-        # Depth prediction
         img_np = np.array(img_pared)
         inp = prepare(normalize(transform({"image": img_np})["image"]))
         sample = torch.from_numpy(inp).unsqueeze(0).to(device)
         with torch.no_grad():
-            pred = model(sample).squeeze().cpu().numpy()
+            pred = model(sample).cpu().numpy().squeeze()
 
-        # Post-procesado
         h, w = img_np.shape[:2]
         pred = cv2.normalize(
             cv2.resize(pred, (w, h)),
             None, 0, 1, cv2.NORM_MINMAX
         )
 
-        # Superponer cuadro en el centro
         base = img_np.astype(np.float32)
         cu = np.array(img_cuadro).astype(np.float32)
         alpha = cu[..., 3:] / 255.0
@@ -79,13 +78,10 @@ async def visualizar(pared: UploadFile = File(...), cuadro: UploadFile = File(..
                 base[y0:y0+cu.shape[0], x0:x0+cu.shape[1], c] * (1 - alpha[..., 0])
             )
 
-        # Devuelve PNG en base64
         out = Image.fromarray(base.astype(np.uint8))
         buf = io.BytesIO()
         out.save(buf, format="PNG")
-        return JSONResponse({
-            "base64": base64.b64encode(buf.getvalue()).decode()
-        })
+        return JSONResponse({"base64": base64.b64encode(buf.getvalue()).decode()})
 
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
