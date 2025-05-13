@@ -16,12 +16,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 midas = torch.hub.load(
     "isl-org/MiDaS",            # repo oficial
     "dpt_swin2_tiny_256",       # nombre del modelo
-    pretrained=True
+    pretrained=True,
+    trust_repo=True             # evita validación de GitHub API (rate limit)
 )
 midas.to(device).eval()
 
 # Transforms oficiales
-transforms = torch.hub.load("isl-org/MiDaS", "transforms")
+transforms = torch.hub.load(
+    "isl-org/MiDaS",
+    "transforms",
+    trust_repo=True             # idem para los transforms
+)
 transform = transforms.dpt_transform  # para redes DPT
 
 @app.post("/visualizar")
